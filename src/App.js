@@ -8,6 +8,7 @@ function App() {
   const [books, setBooks] = useState([])
   const [book, setBook] = useState({book_name: "", book_author: ""})
   const [readBooks, setReadBooks] = useState([])
+  const [bookList, setBookList] = useState([])
 
   useEffect(() => {
     fetchBooks()
@@ -70,7 +71,7 @@ async function fetchBooks() {
   return (
     <section className="App">
       <Header/>
-      <SearchBar book={book} setBook={setBook} fetchBooks={fetchBooks}/>
+      <SearchBar book={book} setBook={setBook} fetchBooks={fetchBooks} setBookList={setBookList}/>
       <section className="grid-container">
         <section className="grid-item">
       <h3>Bookshelf:</h3>

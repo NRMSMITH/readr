@@ -1,8 +1,24 @@
 import {supabase} from '../client';
+import axios from "axios";
+import { useEffect, useState } from 'react';
 
-const SearchBar = ({book, fetchBooks, setBook}) => {
+function SearchBar({book, fetchBooks, setBookList}) {
     const {book_name, book_author} = book
+    const [searchTerm, setSearchTerm] = useState('');
+    
 
+    const baseURL = `https://www.googleapis.com/books/v1/volumes`
+    const handleSubmit = (e) => {
+      e.preventDefault()
+      axios
+      .get(baseURL, {params: {q: searchTerm, maxResults: 10}})
+      .then(({data}) => {
+        console.log(data)
+        //write a utils function that removes unnecessary data and returns as an array of objects
+        setBookList(data)
+      })
+    }
+  
 
 
     async function createBook() {
@@ -12,22 +28,18 @@ const SearchBar = ({book, fetchBooks, setBook}) => {
           {book_name, book_author}
         ])
         .single()
-        setBook({book_name: "", book_author: ""})
+        setSearchTerm({book_name: "", book_author: ""})
         fetchBooks()
       }
 
     return (
-        <section>
-        <input placeholder="nameOfBook"
-      value={book_name}
-      onChange={e => setBook({...book, book_name: e.target.value})}
+        <form onSubmit={handleSubmit}>
+        <input placeholder="Title/Author"
+      value={searchTerm}
+      onChange={e => setSearchTerm(e.target.value)}
       />
-      <input placeholder="authorOfBook"
-      value={book_author}
-      onChange={e => setBook({...book, book_author: e.target.value})}
-      />
-      <button onClick={createBook}>add a book!</button>
-      </section>
+      <button>find a book!</button>
+      </form>
     )
 }
 
