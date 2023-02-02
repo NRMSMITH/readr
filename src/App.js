@@ -1,33 +1,23 @@
 import './App.css';
 import { useState, useEffect } from 'react'
 import {supabase} from './client'
+import Header from './components/Header'
+import SearchBar from './components/SearchBar'
 
 function App() {
   const [books, setBooks] = useState([])
   const [book, setBook] = useState({book_name: "", book_author: ""})
-  const {book_name, book_author} = book;
+  const [readBooks, setReadBooks] = useState([])
 
   useEffect(() => {
     fetchBooks()
   }, [])
 
-
-  async function fetchBooks() {
+async function fetchBooks() {
     const { data } = await supabase
     .from('book_list')
     .select()
     setBooks(data)
-  }
-
-  async function createBook() {
-    await supabase
-    .from('book_list')
-    .insert([
-      {book_name, book_author}
-    ])
-    .single()
-    setBook({book_name: "", book_author: ""})
-    fetchBooks()
   }
 
   async function deleteBook(bookId) {
@@ -36,35 +26,77 @@ function App() {
     .delete()
     .eq('id', bookId)
     fetchBooks()
+    if(error) console.log(error)
+    if(data) console.log(data)
+  }
 
-    if(error) {
-      console.log(error)
-    }
+  async function fetchReadBooks() {
+    const { data } = await supabase
+    .from('books_read')
+    .select()
+    setReadBooks(data)
+  }
 
-    if(data) {
-      console.log(data)
+  async function deleteBookFromRead(readBookID) {
+    const {data, error} = await supabase
+    .from('books_read')
+    .delete()
+    .eq('id', readBookID)
+    fetchReadBooks()
+    if(error) console.log(error)
+    if(data) console.log(data)
+  }
+  
+
+ async function moveBook(book) {
+  const bookId = parseInt(book.id)
+    const {error} = await supabase
+    .from('books_read')
+    .insert([{id: bookId, book_name: book.book_name, book_author: book.book_author}])
+    if(error) console.log(error)
+    else {
+      setReadBooks((books) => {
+        const newlyReadBooks = [
+          ...books,
+          {id: bookId, book_name: book.book_name, book_author: book.book_author}
+        ]
+        return newlyReadBooks;
+      })
+      deleteBook(book.id)
     }
   }
 
+
   return (
     <section className="App">
-      <input placeholder="nameOfBook"
-      value={book_name}
-      onChange={e => setBook({...book, book_name: e.target.value})}
-      />
-      <input placeholder="authorOfBook"
-      value={book_author}
-      onChange={e => setBook({...book, book_author: e.target.value})}
-      />
-      <button onClick={createBook}>add a book!</button>
+      <Header/>
+      <SearchBar book={book} setBook={setBook} fetchBooks={fetchBooks}/>
+      <section className="grid-container">
+        <section className="grid-item">
+      <h3>Bookshelf:</h3>
       {books.map((book) => (
         <section key={book.id}>
           <h3>{book.book_name}</h3>
           <p>{book.book_author}</p>
-          <button onClick={() => {deleteBook(book.id)}}>Read</button>
+          <button onClick={() => {deleteBook(book.id)}}>Delete</button>
+          <button onClick={() => {moveBook(book)}}>Read</button>
         </section>
       )
       )}
+      </section>
+      <section className="grid-item">
+
+      <h3>Books Read:</h3>
+      {readBooks.map((readbook) => (
+        <section key={readbook.id}>
+          <h3>{readbook.book_name}</h3>
+          <p>{readbook.book_author}</p>
+          <button onClick={() => {deleteBookFromRead(readbook.id)}}>Delete</button>
+          </section>
+      )
+      )}
+      </section>
+      </section>
     </section>
   );
 }
